@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const establishmentSchema = mongoose.Schema({
-  admin: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
+  admin: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
   name: { type: String, required: true },
   adress: {
     street: String,

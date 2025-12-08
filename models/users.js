@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const userSchema = mongoose.Schema({
   lastName: { type: String, required: true },
   firstName: { type: String, required: true },
-  email: { type: String, required: true, match: /\S+@\S+\.\S+/ },
+  email: { type: String, required: true },
   password: { type: String, select: false },
   token: String,
   createdAt: { type: Date, default: Date.now },
