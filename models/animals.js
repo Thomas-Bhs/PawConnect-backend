@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const animalSchema = mongoose.Schema({
-  location: { lat: Number, long: Number, required: true },
+  location: { lat: Number, long: Number },
   date: Date,
   animalType: { type: String, enum: [chat, chien], required: true },
   desc: { type: String, required: true },
   state: [{ type: String, required: true }],
   photoUrl: String,
-  status: { type: String, enum: ['nouveau', 'en cours', 'terminé'], required: true },
+  status: { type: String, enum: ['nouveau', 'en cours', 'terminé'] },
   reporter: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
   handlers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
   history: [
@@ -19,5 +19,6 @@ const animalSchema = mongoose.Schema({
     },
   ],
 });
+
 const Animal = mongoose.model('animals', animalSchema);
 module.exports = Animal;

@@ -8,7 +8,7 @@ const userSchema = mongoose.Schema({
   token: String,
   createdAt: { type: Date, default: Date.now },
   role: { type: String, enum: ['civil', 'agent'], required: true },
-  establishmentRef: { type: mongoose.Schema.Types.ObjectId, red: 'establishments' },
+  establishmentRef: { type: mongoose.Schema.Types.ObjectId, ref: 'establishments' },
 });
 
 const User = mongoose.model('users', userSchema);

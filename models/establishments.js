@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const establishmentSchema = mongoose.Schema({
-  adming: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
+  admin: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
   name: { type: String, required: true },
   adress: {
     street: String,
@@ -11,7 +11,7 @@ const establishmentSchema = mongoose.Schema({
   },
   location: { lat: Number, long: Number },
   phone: { type: Number, required: true },
-  email: { type: String, match: /\S+@\S+\.\S+/, required: true },
+  email: { type: String, required: true },
   logo: String,
   url: String,
   agents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
