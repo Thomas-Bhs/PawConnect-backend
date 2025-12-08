@@ -18,20 +18,18 @@ const signupLimiter = rateLimit({
 */
 
 router.post('/signup', (req, res) => {
-
-  const { lastName, firstName, email, password, role, establishment_ref } = req.body;
-
   if (!checkBody(req.body, ['lastName', 'firstName', 'email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
 
+  const { lastName, firstName, email, password, role, establishment_ref } = req.body;
   // Check the length of password
   if (password.length < 6) {
     return res.json({ result: false, error: 'Password must be at least 6 characters' });
   }
 
-  // Check if the user has not already been registered by this email 
+  // Check if the user has not already been registered by this email
   User.findOne({ email: req.body.email }).then(data => {
     if (data === null) {
       const hash = bcrypt.hashSync(req.body.password, 10);
@@ -44,7 +42,7 @@ router.post('/signup', (req, res) => {
         token: uid2(32),
         createdAt: Date.now(),
         role: role || 'civil',
-        establishment_ref: establishment_ref || null,
+        establishmentRef: establishment_ref || null,
       });
 
       newUser.save().then(newDoc => {
@@ -56,9 +54,41 @@ router.post('/signup', (req, res) => {
   });
 });
 
+// ROUTE LOGIN
+router.post('/auth', async (req, res) => {
+  if (!checkBody(req.body, ['email', 'password'])) {
+    res.json({ result: false, error: 'Missing or empty fields' });
+    return;
+  }
 
+  const { email, password } = req.body;
 
+  try {
+    // look for user
+    const data = await User.findOne({ email });
+    if (!data) {
+      return res
+        .status(404)
+        .json({ result: false, error: "Nous n'avons pas trouvé cet utilisateur" });
+    } else if (data && bcrypt.compareSync(password, data.password)) {
+      // if user's found & password's ok send back user's infos to frontend
+      res.json({
+        result: true,
+        user: { firstName: data.firstName, token: data.token, role: data.role, id: data._id },
+      });
+    } else {
+      return res.status(403).json({ result: false, error: 'Mot de passe incorrect' });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ result: false, error: 'Probleme avec la base de données' });
+  }
+});
+
+// ROUTE TEST
+router.get('/', async (req, res) => {
+  const data = await User.find();
+  res.json({ result: true, data });
+});
 
 module.exports = router;
-
-

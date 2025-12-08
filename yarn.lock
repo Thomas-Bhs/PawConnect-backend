@@ -303,7 +303,7 @@ mongodb@~7.0:
     bson "^7.0.0"
     mongodb-connection-string-url "^7.0.0"
 
-mongoose@^9.0.1:
+mongoose@^9.0.0:
   version "9.0.1"
   resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-9.0.1.tgz#2b4545ef9218be65eaa5910b475b6025df5c6fdf"
   integrity sha512-aHPfQx2YX5UwAmMVud7OD4lIz9AEO4jI+oDnRh3lPZq9lrKTiHmOzszVffDMyQHXvrf4NXsJ34kpmAhyYAZGbw==
