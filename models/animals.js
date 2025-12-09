@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const animalSchema = mongoose.Schema({
   location: { lat: Number, long: Number },
   date: Date,
-  animalType: { type: String, enum: [chat, chien], required: true },
+  animalType: { type: String, enum: ["chat", "chien"], required: true },
   desc: { type: String, required: true },
   state: [{ type: String, required: true }],
   photoUrl: String,
