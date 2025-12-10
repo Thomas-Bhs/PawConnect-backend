@@ -45,8 +45,16 @@ router.post('/signup', (req, res) => {
         establishmentRef: establishment_ref || null,
       });
 
-      newUser.save().then(newDoc => {
-        res.json({ result: true, token: newDoc.token, newDoc });
+      newUser.save().then((savedUser) => {
+        res.json({ 
+          result: true, 
+          user: {
+            id: savedUser._id,
+            firstName: savedUser.firstName,
+            role: savedUser.role,
+            token: savedUser.token,
+          },
+        });
       });
     } else {
       res.json({ result: false, error: 'This Email is already used by an User' });
