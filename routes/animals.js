@@ -12,6 +12,7 @@ router.get('/civil/:token', checkRoleCivil, (req, res) => {
   // Pour chercher les animaux de cet utilisateur,
   // on doit utiliser req.user._id car Mongo attend un ObjectId.
   Animal.find({ reporter: req.user._id })
+  .sort({ date: -1 })
     .then((data) => {
       if (!data || data.length === 0) {
         return res.json({
