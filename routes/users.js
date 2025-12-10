@@ -18,8 +18,10 @@ const signupLimiter = rateLimit({
 */
 
 router.post('/signup', (req, res) => {
+  const { lastName, firstName, email, password, role, establishmentRef } = req.body;
 
-  const { lastName, firstName, email, password, role, establishment_ref } = req.body;
+  console.log("BODY REÇU :", req.body);
+  console.log("establishmentRef =", establishmentRef);
 
   if (!checkBody(req.body, ['lastName', 'firstName', 'email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
@@ -31,8 +33,8 @@ router.post('/signup', (req, res) => {
     return res.json({ result: false, error: 'Password must be at least 6 characters' });
   }
 
-  // Check if the user has not already been registered by this email 
-  User.findOne({ email: req.body.email }).then(data => {
+  // Check if the user has not already been registered by this email
+  User.findOne({ email: req.body.email }).then((data) => {
     if (data === null) {
       const hash = bcrypt.hashSync(req.body.password, 10);
 
@@ -44,11 +46,19 @@ router.post('/signup', (req, res) => {
         token: uid2(32),
         createdAt: Date.now(),
         role: role || 'civil',
-        establishment_ref: establishment_ref || null,
+        establishmentRef: establishmentRef || null,
       });
 
-      newUser.save().then(newDoc => {
-        res.json({ result: true, token: newDoc.token, newDoc });
+      newUser.save().then((savedUser) => {
+        res.json({ 
+          result: true, 
+          user: {
+            id: savedUser._id,
+            firstName: savedUser.firstName,
+            role: savedUser.role,
+            token: savedUser.token,
+          },
+        });
       });
     } else {
       res.json({ result: false, error: 'This Email is already used by an User' });
@@ -56,9 +66,4 @@ router.post('/signup', (req, res) => {
   });
 });
 
-
-
-
 module.exports = router;
-
-
