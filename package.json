@@ -17,17 +17,11 @@
     "jest": "^30.2.0",
     "mongoose": "^9.0.0",
     "morgan": "~1.9.1",
-<<<<<<< HEAD
-    "uid2": "^1.0.0"
-  },
-  "devDependencies": {
-    "jest": "^30.2.0",
-=======
     "uid2": "^1.0.0",
     "uniqid": "^5.4.0"
   },
   "devDependencies": {
->>>>>>> 4f0be82332b1e0ee0c8824564f475845f9258454
+    "jest": "^30.2.0",
     "supertest": "^7.1.4"
   }
 }
