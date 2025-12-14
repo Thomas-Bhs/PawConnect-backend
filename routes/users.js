@@ -118,8 +118,8 @@ router.post('/auth', async (req, res) => {
 
 // ROUTE TEST
 router.get('/', async (req, res) => {
-  const data = await User.find();
-  res.json({ result: true, data });
+  const users = await User.find();
+  res.json({ result: true, users });
 });
 //ROUTE UPDATE PROFILE
 router.put('/updateProfile', (req, res) => {
