@@ -101,7 +101,8 @@ router.post('/add', getUserIdWithToken, async (req, res) => {
       photoUrl,
       status: 'nouveau',
       reporter: req.userId,
-      handlers: [],
+      // establishment: null,
+      // currentHandler: null,
       history: [],
     });
 
@@ -257,18 +258,38 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Route GET /animals/populate/:id
-// Permet de récupérer tous les signalements d’un utilisateur avec les infos des handlers et établissements associés
+// Permet de récupérer tous les signalements d’un utilisateur avec les infos de l'établissement associé
 router.get('/populate/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const reports = await Animal.find({ reporter: id })
       .populate({
-        path: 'handlers',
-        select: 'firstName lastName establishmentRef',
-        populate: {
-          path: 'establishmentRef',
-          select: 'name address location phone email logo url',
-        },
+        path: 'establishment',
+        select: 'name address location phone email logo url',
+      })
+      .sort({ date: -1 });
+    res.json({ result: true, reports });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ result: false, error: 'Erreur serveur' });
+  }
+});
+
+// Route Get /animals/agent/:id
+// Recupere les signalements pris en charge par son etablissement et les nouveaux signalements
+router.get('/agent/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
+    }
+    const reports = await Animal.find({
+      $or: [{ status: 'nouveau' }, { establishment: user.establishment }],
+    })
+      .populate({
+        path: 'currentHandler',
+        select: 'firstName lastName',
       })
       .sort({ date: -1 });
     res.json({ result: true, reports });

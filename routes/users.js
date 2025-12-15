@@ -24,7 +24,7 @@ router.post('/signup', (req, res) => {
     return;
   }
 
-  const { lastName, firstName, email, password, role, establishmentRef } = req.body;
+  const { lastName, firstName, email, password, role, establishment } = req.body;
 
   // Check the email format
   const EMAIL_REGEX =
@@ -54,7 +54,7 @@ router.post('/signup', (req, res) => {
         token: uid2(32),
         createdAt: Date.now(),
         role: role || 'civil',
-        establishmentRef: establishmentRef || null,
+        establishment: establishment || null,
       });
 
       newUser.save().then(savedUser => {
@@ -67,7 +67,7 @@ router.post('/signup', (req, res) => {
             email: savedUser.email,
             role: savedUser.role,
             token: savedUser.token,
-            establishmentRef: savedUser.establishmentRef,
+            establishment: savedUser.establishment,
           },
         });
       });
@@ -107,7 +107,7 @@ router.post('/auth', async (req, res) => {
         email: data.email,
         role: data.role,
         token: data.token,
-        establishmentRef: data.establishmentRef,
+        establishment: data.establishment,
       },
     });
   } catch (err) {
@@ -123,7 +123,7 @@ router.post('/auth', async (req, res) => {
 // });
 //ROUTE UPDATE PROFILE
 router.put('/updateProfile', (req, res) => {
-  const { token, firstName, lastName, password, establishmentRef, email, phone } = req.body;
+  const { token, firstName, lastName, password, establishment, email, phone } = req.body;
 
   if (!token) {
     return res.status(400).json({ result: false, error: 'Token requis pour identification' });
@@ -133,7 +133,7 @@ router.put('/updateProfile', (req, res) => {
     return res.json({ result: false, error: 'Password avec 6 éléments minimun' });
   }
   // Refuser champs vides si ils sont envoyés
-  const fields = { firstName, lastName, email, phone, establishmentRef, password };
+  const fields = { firstName, lastName, email, phone, establishment, password };
   for (const key in fields) {
     if (fields[key] !== undefined && fields[key] === '') {
       return res.json({ result: false, error: `${key} ne peut pas être vide` });
@@ -152,7 +152,7 @@ router.put('/updateProfile', (req, res) => {
       if (lastName) updatedFields.lastName = lastName;
       if (email) updatedFields.email = email;
       if (phone) updatedFields.phone = phone;
-      if (establishmentRef) updatedFields.establishmentRef = establishmentRef;
+      if (establishment) updatedFields.establishment = establishment;
 
       if (password) updatedFields.password = bcrypt.hashSync(password, 10);
 
@@ -167,7 +167,7 @@ router.put('/updateProfile', (req, res) => {
               email: updatedProfile.email,
               role: updatedProfile.role,
               token: updatedProfile.token,
-              establishmentRef: updatedProfile.establishmentRef,
+              establishment: updatedProfile.establishment,
             },
           });
         })
