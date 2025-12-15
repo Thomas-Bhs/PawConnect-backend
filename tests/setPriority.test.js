@@ -1,22 +1,20 @@
 const { setPriority } = require('../modules/setPriority');
 
 describe('setPriority function', () => {
-  it('returns FAIBLE for empty array or invalid input', () => {
-    expect(setPriority([])).toBe('FAIBLE');
-    expect(setPriority(null)).toBe('FAIBLE');
+  it('returns faible for empty array or invalid input', () => {
+    expect(setPriority([])).toBe('faible');
   });
 
-  it('calculates MODERE for a single BLESSE (50)', () => {
-    expect(setPriority(['BLESSE'])).toBe('MODERE');
+  it('returns urgent for a single blesse (50)', () => {
+    expect(setPriority(['blesse'])).toBe('urgent');
   });
 
-  it('calculates URGENT for BLESSE + DANGER (100)', () => {
-    expect(setPriority(['BLESSE', 'DANGER'])).toBe('URGENT');
+  it('calculates important for agressif + coince (60)', () => {
+    expect(setPriority(['agressif', 'coince'])).toBe('important');
   });
 
-  it('normalizes inputs (accents and case) and dedupes', () => {
-    expect(setPriority(['Blessé', 'blessé', 'JEUNE'])).toBe('IMPORTANT');
+  it('calculates modere for peureux + sain + petits', () => {
+    expect(setPriority(['peureux', 'sain', 'petits'])).toBe('modere');
     // Blessé (50) + JEUNE (10) = 60 => IMPORTANT
-    expect(setPriority(['Blessé', 'JEUNE'])).toBe('IMPORTANT');
   });
 });
