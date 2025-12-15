@@ -260,17 +260,22 @@ router.delete('/:id', async (req, res) => {
 // Permet de récupérer tous les signalements d’un utilisateur avec les infos des handlers et établissements associés
 router.get('/populate/:id', async (req, res) => {
   const { id } = req.params;
-  const reports = await Animal.find({ reporter: id })
-    .populate({
-      path: 'handlers',
-      select: 'firstName lastName establishmentRef',
-      populate: {
-        path: 'establishmentRef',
-        select: 'name address location phone email logo url',
-      },
-    })
-    .sort({ date: -1 });
-  res.json({ result: true, reports });
+  try {
+    const reports = await Animal.find({ reporter: id })
+      .populate({
+        path: 'handlers',
+        select: 'firstName lastName establishmentRef',
+        populate: {
+          path: 'establishmentRef',
+          select: 'name address location phone email logo url',
+        },
+      })
+      .sort({ date: -1 });
+    res.json({ result: true, reports });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ result: false, error: 'Erreur serveur' });
+  }
 });
 
 module.exports = router;
