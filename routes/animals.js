@@ -34,7 +34,8 @@ router.get('/civil/:token', checkRoleCivil, (req, res) => {
     });
 });
 
-// GET ALL ANIMAL REPORTS
+// Route GET /animals
+// Permet de récupérer tous les signalements
 router.get('/', async (req, res) => {
   try {
     const animals = await Animal.find().sort({ date: -1 });
@@ -45,7 +46,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-//GET ANIMAL REPORTS BY USER
+// Route get /animals/:id
+// Permet de récupérer tous les signalements d’un utilisateur
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -57,6 +59,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Route POST /animals/add
+// Permet à un utilisateur de créer un nouveau signalement
 router.post('/add', getUserIdWithToken, async (req, res) => {
   if (
     !checkBody(req.data, ['location', 'animalType', 'state', 'title', 'desc']) ||
@@ -235,7 +239,26 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.get('/test/:id', async (req, res) => {
+// Route DELETE /animals/:id
+// Permet de supprimer un signalement par son ID
+// TODO AJOUTER UNE AUTHENTIFICATION
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deletedAnimal = await Animal.findByIdAndDelete(id);
+    if (!deletedAnimal) {
+      return res.status(404).json({ result: false, error: 'Signalement introuvable' });
+    }
+    res.json({ result: true, message: 'Signalement supprimé avec succès' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ result: false, error: 'Erreur serveur' });
+  }
+});
+
+// Route GET /animals/populate/:id
+// Permet de récupérer tous les signalements d’un utilisateur avec les infos des handlers et établissements associés
+router.get('/populate/:id', async (req, res) => {
   const { id } = req.params;
   const reports = await Animal.find({ reporter: id })
     .populate({
