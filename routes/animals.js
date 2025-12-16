@@ -3,13 +3,15 @@ var router = express.Router();
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const uniqid = require('uniqid');
-
 const Animal = require('../models/animals');
 const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
 const { setPriority } = require('../modules/setPriority');
 const { checkRoleCivil } = require('../middleware/checkRoleCivil');
 const { getUserIdWithToken } = require('../middleware/getUserIdWithToken');
+const { getProsToNotifyNewReport } = require('../services/report.service');
+const { notifyUsers } = require('../services/notifications.service');
+// const { authJWT } = require('../middleware/authJWT');
 
 router.get('/civil/:token', checkRoleCivil, (req, res) => {
   // req.user vient du middleware checkRoleCivil (req.user = user).
@@ -108,6 +110,17 @@ router.post('/add', getUserIdWithToken, async (req, res) => {
 
     const result = await newAnimal.save();
     console.log('newAnimal', result);
+
+    // Appelle le service pour selectionner les pros à notifier
+    const prosToNotify = await getProsToNotifyNewReport(result);
+    // Appelle le service pour envoyer les notifications aux pros
+    await notifyUsers({
+      recipients: prosToNotify,
+      type: 'NEW_REPORT',
+      message: 'Un nouveau signalement a été effectué à proximité de votre établissement.',
+      reportId: result._id,
+    });
+
     res.status(200).json({ result: true, animal: result });
   } catch (err) {
     console.error(err);
@@ -216,6 +229,14 @@ router.put('/:id', async (req, res) => {
       });
     }
 
+    // Envoi de la notification à l'utilisateur qui a fait le signalement
+    await notifyUsers({
+      recipients: [updated.reporter],
+      type: 'REPORT_UPDATE',
+      message: `Le statut de votre signalement "${updated.title}" a été mis à jour : ${status}.`,
+      reportId: updated._id,
+    });
+
     // ─────────────────────────────────────────────
     // 7) Réponse OK
     // ─────────────────────────────────────────────
@@ -242,7 +263,7 @@ router.put('/:id', async (req, res) => {
 
 // Route DELETE /animals/:id
 // Permet de supprimer un signalement par son ID
-// TODO AJOUTER UNE AUTHENTIFICATION
+// TODO AJOUTER JWT ICI
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -259,6 +280,7 @@ router.delete('/:id', async (req, res) => {
 
 // Route GET /animals/populate/:id
 // Permet de récupérer tous les signalements d’un utilisateur avec les infos de l'établissement associé
+// TODO AJOUTER JWT ICI
 router.get('/populate/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -277,6 +299,7 @@ router.get('/populate/:id', async (req, res) => {
 
 // Route Get /animals/agent/:id
 // Recupere les signalements pris en charge par son etablissement et les nouveaux signalements
+// TODO AJOUTER JWT ICI
 router.get('/agent/:id', async (req, res) => {
   const { id } = req.params;
   try {
