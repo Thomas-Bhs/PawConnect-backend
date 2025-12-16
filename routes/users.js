@@ -5,6 +5,7 @@ const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
+const checkEmailUnique = require('../middleware/checkEmailUnique');
 
 /* ---ADD Security - max 10 request by ID each 15 min --- 
 
@@ -121,64 +122,141 @@ router.post('/auth', async (req, res) => {
 //   const users = await User.find();
 //   res.json({ result: true, users });
 // });
+
 //ROUTE UPDATE PROFILE
-router.put('/updateProfile', (req, res) => {
-  const { token, firstName, lastName, password, establishmentRef, email, phone } = req.body;
+router.put('/updateProfile', checkEmailUnique, (req, res) => {
+  const { token, firstName, lastName, password, establishmentRef, email } = req.body;
 
   if (!token) {
     return res.status(400).json({ result: false, error: 'Token requis pour identification' });
   }
+  // Check the email format
+  const EMAIL_REGEX =
+    /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i;
 
+  // Check the password
   if (password && password.length < 6) {
     return res.json({ result: false, error: 'Password avec 6 éléments minimun' });
   }
-  // Refuser champs vides si ils sont envoyés
-  const fields = { firstName, lastName, email, phone, establishmentRef, password };
-  for (const key in fields) {
-    if (fields[key] !== undefined && fields[key] === '') {
-      return res.json({ result: false, error: `${key} ne peut pas être vide` });
-    }
-  }
 
   // Chercher l’utilisateur par token
-  User.findOne({ token })
-    .then(user => {
-      if (!user) {
-        return res.status(404).json({ result: false, error: 'Utilisateur non trouvé' });
+  User.findOne({ token }).then(user => {
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'Utilisateur non trouvé' });
+    }
+
+    // Construire l'objet des champs à mettre à jour
+    const updatedFields = {};
+
+    // prenom
+    if (firstName !== undefined) {
+      if (firstName.trim() === '') {
+        return res.status(400).json({ result: false, error: 'Prénom vide' });
+      }
+      if (firstName !== user.firstName) {
+        updatedFields.firstName = firstName;
+      }
+    }
+
+    // nom
+    if (lastName !== undefined) {
+      if (lastName.trim() === '') {
+        return res.status(400).json({ result: false, error: 'Nom vide' });
+      }
+      if (lastName !== user.lastName) {
+        updatedFields.lastName = lastName;
+      }
+    }
+
+    // email
+    if (email !== undefined) {
+      if (!EMAIL_REGEX.test(email)) {
+        return res.status(400).json({ result: false, error: 'Email invalide' });
+      }
+      if (email !== user.email) {
+        updatedFields.email = email;
+      }
+    }
+
+    // password
+    if (password !== undefined && password !== '') {
+      if (password.length < 6) {
+        return res.status(400).json({
+          result: false,
+          error: 'Mot de passe minimum 6 caractères',
+        });
+      }
+      updatedFields.password = bcrypt.hashSync(password, 10);
+    }
+
+    // option
+    if (establishmentRef !== undefined && establishmentRef !== user.establishmentRef) {
+      updatedFields.establishmentRef = establishmentRef || null;
+    }
+
+    // verification si aucune modification pour éviter requetes inutiles
+    if (Object.keys(updatedFields).length === 0) {
+      return res.json({
+        result: false,
+        error: 'Aucune modification détectée',
+      });
+    }
+
+    User.findByIdAndUpdate(user._id, updatedFields, { new: true })
+      .then(updatedProfile => {
+        res.json({
+          result: true,
+          user: {
+            id: updatedProfile._id,
+            firstName: updatedProfile.firstName,
+            lastName: updatedProfile.lastName,
+            email: updatedProfile.email,
+            role: updatedProfile.role,
+            token: updatedProfile.token,
+            establishmentRef: updatedProfile.establishmentRef,
+          },
+          message: 'Profil mis à jour',
+        });
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({ result: false, error: 'Erreur serveur' });
+      });
+  });
+});
+
+router.delete('/delete', (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({
+      result: false,
+      error: 'Token requis',
+    });
+  }
+
+  User.findOneAndDelete({ token })
+    .then(deletedUser => {
+      if (!deletedUser) {
+        return res.status(404).json({
+          result: false,
+          error: 'Utilisateur introuvable',
+        });
       }
 
-      const updatedFields = {};
-      if (firstName) updatedFields.firstName = firstName;
-      if (lastName) updatedFields.lastName = lastName;
-      if (email) updatedFields.email = email;
-      if (phone) updatedFields.phone = phone;
-      if (establishmentRef) updatedFields.establishmentRef = establishmentRef;
+      console.log('User deleted');
 
-      if (password) updatedFields.password = bcrypt.hashSync(password, 10);
-
-      User.findByIdAndUpdate(user._id, updatedFields, { new: true })
-        .then(updatedProfile => {
-          res.json({
-            result: true,
-            user: {
-              id: updatedProfile._id,
-              firstName: updatedProfile.firstName,
-              lastName: updatedProfile.lastName,
-              email: updatedProfile.email,
-              role: updatedProfile.role,
-              token: updatedProfile.token,
-              establishmentRef: updatedProfile.establishmentRef,
-            },
-          });
-        })
-        .catch(err => {
-          console.log(err);
-          res.status(500).json({ result: false, error: 'Erreur serveur' });
-        });
+      res.status(200).json({
+        result: true,
+        message: 'Votre compte est supprimé.',
+      });
     })
     .catch(err => {
       console.log(err);
-      res.status(500).json({ result: false, error: 'Erreur serveur' });
+      res.status(500).json({
+        result: false,
+        error: 'Erreur serveur',
+      });
     });
 });
 
