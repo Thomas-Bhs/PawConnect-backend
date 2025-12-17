@@ -3,9 +3,12 @@ var router = express.Router();
 
 const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
-const uid2 = require('uid2');
+//const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
 const checkEmailUnique = require('../middleware/checkEmailUnique');
+
+const jwt = require('jsonwebtoken');
+const authJwt = require('../middleware/JWT');
 
 /* ---ADD Security - max 10 request by ID each 15 min --- 
 
@@ -43,7 +46,7 @@ router.post('/signup', (req, res) => {
   }
 
   // Check if the user has not already been registered by this email
-  User.findOne({ email: req.body.email }).then(data => {
+  User.findOne({ email: req.body.email }).then((data) => {
     if (data === null) {
       const hash = bcrypt.hashSync(req.body.password, 10);
 
@@ -52,13 +55,21 @@ router.post('/signup', (req, res) => {
         firstName,
         email,
         password: hash,
-        token: uid2(32),
         createdAt: Date.now(),
         role: role || 'civil',
         establishment: establishment || null,
       });
 
-      newUser.save().then(savedUser => {
+      newUser.save().then((savedUser) => {
+        //Create JWT token
+        const token = jwt.sign(
+          { userId: savedUser._id, role: savedUser.role },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: '12h',
+          }
+        );
+
         res.json({
           result: true,
           user: {
@@ -70,6 +81,7 @@ router.post('/signup', (req, res) => {
             token: savedUser.token,
             establishment: savedUser.establishment,
           },
+          token, //JWT token
         });
       });
     } else {
@@ -98,9 +110,16 @@ router.post('/auth', async (req, res) => {
     if (!passwordMatch) {
       return res.status(403).json({ result: false, error: 'Mot de passe incorrect' });
     }
+
+    //Create JWT token
+    const token = jwt.sign({ userId: data._id, role: data.role }, process.env.JWT_SECRET, {
+      expiresIn: '12h',
+    });
+
     // if user's found & password's ok send back user's infos to frontend
     res.json({
       result: true,
+      token, //JWT token
       user: {
         id: data._id,
         firstName: data.firstName,
@@ -123,13 +142,15 @@ router.post('/auth', async (req, res) => {
 //   res.json({ result: true, users });
 // });
 
-//ROUTE UPDATE PROFILE
-router.put('/updateProfile', checkEmailUnique, (req, res) => {
-  const { token, firstName, lastName, password, establishmentRef, email, phone } = req.body;
 
-  if (!token) {
+//ROUTE UPDATE PROFILE
+router.put('/updateProfile', checkEmailUnique, authJwt, async (req, res) => {
+  const { firstName, lastName, password, establishmentRef, email, phone } = req.body;
+
+  /*if (!token) {
     return res.status(400).json({ result: false, error: 'Token requis pour identification' });
   }
+  */
   // Check the email format
   const EMAIL_REGEX =
     /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i;
@@ -139,11 +160,14 @@ router.put('/updateProfile', checkEmailUnique, (req, res) => {
     return res.json({ result: false, error: 'Password avec 6 éléments minimun' });
   }
 
+
+  /*
   // Chercher l’utilisateur par token
   User.findOne({ token }).then(user => {
     if (!user) {
       return res.status(404).json({ result: false, error: 'Utilisateur non trouvé' });
     }
+*/
 
     // Construire l'objet des champs à mettre à jour
     const updatedFields = {};
@@ -202,8 +226,12 @@ router.put('/updateProfile', checkEmailUnique, (req, res) => {
       });
     }
 
-    User.findByIdAndUpdate(user._id, updatedFields, { new: true })
-      .then(updatedProfile => {
+    try {
+      const updatedProfile = await User.findByIdAndUpdate(
+        req.userId, // JWT token
+        updatedFields,
+        { new: true }
+      );
         res.json({
           result: true,
           user: {
@@ -212,7 +240,7 @@ router.put('/updateProfile', checkEmailUnique, (req, res) => {
             lastName: updatedProfile.lastName,
             email: updatedProfile.email,
             role: updatedProfile.role,
-            token: updatedProfile.token,
+      
             establishmentRef: updatedProfile.establishmentRef,
           },
           message: 'Profil mis à jour',
