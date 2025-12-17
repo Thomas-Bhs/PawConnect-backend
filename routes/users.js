@@ -89,12 +89,12 @@ router.post('/auth', async (req, res) => {
 
   try {
     // look for user
-    const data = await User.findOne({ email });
-    if (!data) {
+    const user = await User.findOne({ email });
+    if (!user) {
       return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
     }
 
-    const passwordMatch = bcrypt.compareSync(password, data.password);
+    const passwordMatch = bcrypt.compareSync(password, user.password);
     if (!passwordMatch) {
       return res.status(403).json({ result: false, error: 'Mot de passe incorrect' });
     }
@@ -102,13 +102,13 @@ router.post('/auth', async (req, res) => {
     res.json({
       result: true,
       user: {
-        id: data._id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        role: data.role,
-        token: data.token,
-        establishment: data.establishment,
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        token: user.token,
+        establishment: user.establishment,
       },
     });
   } catch (err) {
