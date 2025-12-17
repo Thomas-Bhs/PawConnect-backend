@@ -298,7 +298,7 @@ router.put('/:id', authJwt, async (req, res) => {
 // Route DELETE /animals/:id
 // Permet de supprimer un signalement par son ID
 // TODO AJOUTER UNE AUTHENTIFICATION
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',authJwt, async (req, res) => {
   const { id } = req.params;
   try {
     const deletedAnimal = await Animal.findByIdAndDelete(id);
@@ -314,8 +314,8 @@ router.delete('/:id', async (req, res) => {
 
 // Route GET /animals/populate/:id
 // Permet de récupérer tous les signalements d’un utilisateur avec les infos de l'établissement associé
-router.get('/populate/:id', async (req, res) => {
-  const { id } = req.params;
+router.get('/populate/:id',authJwt, async (req, res) => {
+  //const { id } = req.params;
   try {
     const reports = await Animal.find({ reporter: id })
       .populate({
@@ -332,7 +332,7 @@ router.get('/populate/:id', async (req, res) => {
 
 // Route Get /animals/agent/:id
 // Recupere les signalements pris en charge par son etablissement et les nouveaux signalements
-router.get('/agent/:id', async (req, res) => {
+router.get('/agent/:id',authJwt, async (req, res) => {
   const { id } = req.params;
   try {
     const user = await User.findById(id);
