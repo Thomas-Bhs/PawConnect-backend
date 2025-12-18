@@ -3,19 +3,11 @@ var router = express.Router();
 
 const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
-const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
 const checkEmailUnique = require('../middleware/checkEmailUnique');
 
-/* ---ADD Security - max 10 request by ID each 15 min --- 
-
-const rateLimit = require('express-rate-limit');
-const signupLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
-  message: { result: false, error: 'Too many signup attempts, please try again later.' }
-});
-*/
+const jwt = require('jsonwebtoken');
+const authJwt = require('../middleware/JWT');
 
 //SIGNUP ROUTE
 
@@ -52,13 +44,21 @@ router.post('/signup', (req, res) => {
         firstName,
         email,
         password: hash,
-        token: uid2(32),
         createdAt: Date.now(),
         role: role || 'civil',
         establishment: establishment || null,
       });
 
       newUser.save().then(savedUser => {
+        //Create JWT token
+        const token = jwt.sign(
+          { userId: savedUser._id, role: savedUser.role },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: '12h',
+          }
+        );
+
         res.json({
           result: true,
           user: {
@@ -67,9 +67,9 @@ router.post('/signup', (req, res) => {
             lastName: savedUser.lastName,
             email: savedUser.email,
             role: savedUser.role,
-            token: savedUser.token,
             establishment: savedUser.establishment,
           },
+          token, //JWT token
         });
       });
     } else {
@@ -98,9 +98,16 @@ router.post('/auth', async (req, res) => {
     if (!passwordMatch) {
       return res.status(403).json({ result: false, error: 'Mot de passe incorrect' });
     }
+
+    //Create JWT token
+    const token = jwt.sign({ userId: data._id, role: data.role }, process.env.JWT_SECRET, {
+      expiresIn: '12h',
+    });
+
     // if user's found & password's ok send back user's infos to frontend
     res.json({
       result: true,
+      token, //JWT token
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -124,25 +131,18 @@ router.post('/auth', async (req, res) => {
 // });
 
 //ROUTE UPDATE PROFILE
-router.put('/updateProfile', checkEmailUnique, (req, res) => {
-  const { token, firstName, lastName, password, establishmentRef, email, phone } = req.body;
+router.put('/updateProfile', authJwt, checkEmailUnique, async (req, res) => {
+  const { firstName, lastName, password, establishment, email } = req.body;
 
-  if (!token) {
-    return res.status(400).json({ result: false, error: 'Token requis pour identification' });
-  }
   // Check the email format
   const EMAIL_REGEX =
     /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i;
 
-  // Check the password
-  if (password && password.length < 6) {
-    return res.json({ result: false, error: 'Password avec 6 éléments minimun' });
-  }
-
-  // Chercher l’utilisateur par token
-  User.findOne({ token }).then(user => {
+  try {
+    // récupérer l'utilisateur courant via JWT
+    const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(404).json({ result: false, error: 'Utilisateur non trouvé' });
+      return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
     }
 
     // Construire l'objet des champs à mettre à jour
@@ -190,8 +190,8 @@ router.put('/updateProfile', checkEmailUnique, (req, res) => {
     }
 
     // option
-    if (establishmentRef !== undefined && establishmentRef !== user.establishmentRef) {
-      updatedFields.establishmentRef = establishmentRef || null;
+    if (establishment !== undefined && establishment !== user.establishment) {
+      updatedFields.establishment = establishment || null;
     }
 
     // verification si aucune modification pour éviter requetes inutiles
@@ -202,62 +202,36 @@ router.put('/updateProfile', checkEmailUnique, (req, res) => {
       });
     }
 
-    User.findByIdAndUpdate(user._id, updatedFields, { new: true })
-      .then(updatedProfile => {
-        res.json({
-          result: true,
-          user: {
-            id: updatedProfile._id,
-            firstName: updatedProfile.firstName,
-            lastName: updatedProfile.lastName,
-            email: updatedProfile.email,
-            role: updatedProfile.role,
-            token: updatedProfile.token,
-            establishmentRef: updatedProfile.establishmentRef,
-          },
-          message: 'Profil mis à jour',
-        });
-      })
-      .catch(err => {
-        console.log(err);
-        res.status(500).json({ result: false, error: 'Erreur serveur' });
-      });
-  });
+    const updatedProfile = await User.findByIdAndUpdate(
+      req.userId, // JWT token
+      updatedFields,
+      { new: true }
+    );
+    res.json({
+      result: true,
+      user: {
+        id: updatedProfile._id,
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        email: updatedProfile.email,
+        role: updatedProfile.role,
+        establishment: updatedProfile.establishment,
+      },
+      message: 'Profil mis à jour',
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ result: false, error: 'Erreur serveur' });
+  }
 });
 
-router.delete('/delete', (req, res) => {
-  const { token } = req.body;
-
-  if (!token) {
-    return res.status(400).json({
-      result: false,
-      error: 'Token requis',
-    });
+router.delete('/delete', authJwt, async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.userId);
+    res.json({ result: true, message: 'Compte supprimé' });
+  } catch (err) {
+    res.status(500).json({ result: false, error: 'Erreur serveur' });
   }
-
-  User.findOneAndDelete({ token })
-    .then(deletedUser => {
-      if (!deletedUser) {
-        return res.status(404).json({
-          result: false,
-          error: 'Utilisateur introuvable',
-        });
-      }
-
-      console.log('User deleted');
-
-      res.status(200).json({
-        result: true,
-        message: 'Votre compte est supprimé.',
-      });
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({
-        result: false,
-        error: 'Erreur serveur',
-      });
-    });
 });
 
 module.exports = router;
