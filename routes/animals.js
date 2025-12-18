@@ -10,6 +10,7 @@ const { checkBody } = require('../modules/checkBody');
 const { setPriority } = require('../modules/setPriority');
 const { checkRoleCivil } = require('../middleware/checkRoleCivil');
 const { getUserIdWithToken } = require('../middleware/getUserIdWithToken');
+const { default: mongoose } = require('mongoose'); //! VOIR SI CA CAUSE PAS DE BUG DANS ROUTE PUT
 
 router.get('/civil/:token', checkRoleCivil, (req, res) => {
   // req.user vient du middleware checkRoleCivil (req.user = user).
@@ -131,7 +132,7 @@ router.put('/:id', async (req, res) => {
     // status      → nouveau / en cours / terminé
     // description → commentaire de l’agent
     // userId      → identifiant de l’agent
-    const { status, description, userId } = req.body || {};
+    const { status, description, userId, establishment } = req.body || {};
 
     // ─────────────────────────────────────────────
     // 2) Vérification des champs obligatoires
@@ -152,7 +153,7 @@ router.put('/:id', async (req, res) => {
 
     // Un ObjectId MongoDB fait toujours 24 caractères
     // Cette vérification évite un CastError Mongoose
-    if (!id || id.length !== 24) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         result: false,
         error: 'ID invalide',
@@ -188,7 +189,7 @@ router.put('/:id', async (req, res) => {
       id,
       {
         // Mise à jour du statut
-        $set: { status },
+        $set: { status, establishment, currentHandler: userId },
 
         // Ajout de l’entrée d’historique AU DÉBUT du tableau
         $push: {
