@@ -9,8 +9,9 @@ const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
 const { setPriority } = require('../modules/setPriority');
 const { checkRoleCivil } = require('../middleware/checkRoleCivil');
-
-const authJwt = require('../middleware/JWT'); // jwt middleware
+const { getUserIdWithToken } = require('../middleware/getUserIdWithToken');
+const authJwt = require('../middleware/JWT');
+const mongoose = require('mongoose');
 
 router.get('/civil', authJwt, checkRoleCivil, (req, res) => {
   // req.user vient du middleware checkRoleCivil (req.user = user).
@@ -185,7 +186,7 @@ router.put('/:id', authJwt, async (req, res) => {
     // status      → nouveau / en cours / terminé
     // description → commentaire de l’agent
     // userId      → identifiant de l’agent
-    const { status, description } = req.body || {};
+    const { status, description, establishment } = req.body || {};
     const userId = req.userId; // taken from authJwt middleware
 
     // ─────────────────────────────────────────────
@@ -207,7 +208,7 @@ router.put('/:id', authJwt, async (req, res) => {
 
     // Un ObjectId MongoDB fait toujours 24 caractères
     // Cette vérification évite un CastError Mongoose
-    if (!id || id.length !== 24) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         result: false,
         error: 'ID invalide',
@@ -243,7 +244,7 @@ router.put('/:id', authJwt, async (req, res) => {
       id,
       {
         // Mise à jour du statut
-        $set: { status },
+        $set: { status, establishment, currentHandler: userId },
 
         // Ajout de l’entrée d’historique AU DÉBUT du tableau
         $push: {
