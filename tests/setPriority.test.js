@@ -15,6 +15,5 @@ describe('setPriority function', () => {
 
   it('calculates modere for peureux + sain + petits', () => {
     expect(setPriority(['peureux', 'sain', 'petits'])).toBe('modere');
-    // Blessé (50) + JEUNE (10) = 60 => IMPORTANT
   });
 });

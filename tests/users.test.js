@@ -56,7 +56,7 @@ it('POST /users/signup should create a new user', async () => {
   expect(response.statusCode).toBe(200);
   expect(response.body).toHaveProperty('result', true);
   expect(response.body).toHaveProperty('user');
-  expect(response.body.user).toHaveProperty('token');
+  expect(response.body).toHaveProperty('token');
   // delete the test user after creation
   const deleteResult = await User.deleteOne({ email: newUser.email });
   expect(deleteResult.deletedCount).toBe(1);
@@ -86,7 +86,7 @@ it('POST /users/auth should login an existing user', async () => {
   expect(response.statusCode).toBe(200);
   expect(response.body).toHaveProperty('result', true);
   expect(response.body).toHaveProperty('user');
-  expect(response.body.user).toHaveProperty('token');
+  expect(response.body).toHaveProperty('token');
 });
 
 it('POST /users/auth should return an error with wrong password', async () => {
