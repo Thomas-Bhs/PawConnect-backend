@@ -1,6 +1,6 @@
 const animalRepo = require('../repositories/animal.repo');
-// const userRepo = require('../repositories/user.repo');
-const { setPriority } = require('../modules/setPriority');
+const userRepo = require('../repositories/user.repo');
+const { setPriority } = require('../utils/setPriority');
 const mongoose = require('mongoose');
 
 async function newReport(userId, title, desc, location, state, animalType) {
@@ -51,13 +51,13 @@ async function updateHistory(reportId, status, action, handler) {
   if (!mongoose.Types.ObjectId.isValid(handler.establishmentId)) {
     throw new Error('INVALID_ESTABLISHMENT_ID');
   }
-  // const handlerInfos = await userRepo.findUserById(handler.userId);
-  // if (!handlerInfos) {
-  //   throw new Error('USER_NOT_FOUND');
-  // }
-  // if (handlerInfos.establishmentId !== handler.establishmentId) {
-  //   throw new Error('INVALID_ESTABLISHMENT');
-  // }
+  const handlerInfos = await userRepo.findUserById(handler.userId);
+  if (!handlerInfos) {
+    throw new Error('USER_NOT_FOUND');
+  }
+  if (handlerInfos.establishmentId !== handler.establishmentId) {
+    throw new Error('INVALID_ESTABLISHMENT');
+  }
   const payload = {
     date: new Date(),
     status,

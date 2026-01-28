@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Notification = require('../models/notifications');
-const authJwt = require('../middleware/authJWT');
+const Notification = require('../models/Notification.model');
+const authJwt = require('../middlewares/authJWT');
 
 // Recupere les notifications d'un utilisateur
 router.get('/', authJwt, async (req, res) => {

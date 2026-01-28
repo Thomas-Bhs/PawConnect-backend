@@ -1,4 +1,4 @@
-const Notification = require('../models/notifications');
+const Notification = require('../models/Notification.model');
 
 const notifyUsers = async ({ recipients, type, message, reportId }) => {
   // Envoi de notifications aux utilisateurs

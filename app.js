@@ -7,16 +7,15 @@ const logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth.routes');
-var usersRouter = require('./routes/users');
 const uploadRouter = require('./routes/upload.routes');
 const animalsRouter = require('./routes/animals.routes');
-var establishmentsRouter = require('./routes/establishments');
-var notificationsRouter = require('./routes/notifications');
+const establishmentsRouter = require('./routes/establishments');
+const notificationsRouter = require('./routes/notifications.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
-var app = express();
-const fileUpload = require('express-fileupload');
-app.use(fileUpload()); // TODO A DEPLACER SUR LA ROUTE UPLOAD
+const app = express();
+// const fileUpload = require('express-fileupload');
+// app.use(fileUpload());
 const cors = require('cors');
 app.use(cors());
 
@@ -28,7 +27,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
-app.use('/users', usersRouter);
 app.use('/upload', uploadRouter);
 app.use('/animals', animalsRouter);
 app.use('/establishments', establishmentsRouter);

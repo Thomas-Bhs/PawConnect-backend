@@ -1,5 +1,5 @@
 const Establishment = require('../models/Establishment.model');
-const getDistanceBetweenTwoPoints = require('../modules/getDistanceBetweenTwoPoints');
+const getDistanceBetweenTwoPoints = require('../utils/getDistanceBetweenTwoPoints');
 
 const getProsToNotifyNewReport = async report => {
   //? LOGIQUE DE NOTIFICATION AUX PROS LORS D'UN NOUVEAU REPORT

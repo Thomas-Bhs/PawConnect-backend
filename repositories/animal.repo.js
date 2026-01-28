@@ -1,4 +1,4 @@
-const Animal = require('../models/animals');
+const Animal = require('../models/Animal.model');
 
 async function getCivilianReports(userId) {
   const reports = await Animal.find({ reporter: userId })
@@ -23,7 +23,6 @@ async function getAgentReports(userEstablishment) {
 }
 
 module.exports = { getCivilianReports, getAgentReports };
-const Animal = require('../models/Animal.model');
 
 async function newReport(report) {
   const savedReport = await new Animal(report).save();

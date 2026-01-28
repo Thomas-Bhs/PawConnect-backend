@@ -4,13 +4,13 @@ const {
   validateReportBody,
   validateHistoryBody,
   validatePhotoURL,
-} = require('../middleware/animal.validators');
+} = require('../middlewares/animal.validators');
 const {
   postNewReport,
   addPhotoToReport,
   updateHistory,
 } = require('../controllers/animal.controller');
-const authJWT = require('../middleware/authJWT');
+const authJWT = require('../middlewares/authJWT');
 
 // POST new report without the picture
 router.post('/new', authJWT, validateReportBody, postNewReport);
