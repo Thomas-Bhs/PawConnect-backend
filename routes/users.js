@@ -4,7 +4,7 @@ var router = express.Router();
 const User = require('../models/users');
 const { checkBody } = require('../modules/checkBody');
 const bcrypt = require('bcrypt');
-const checkEmailUnique = require('../middleware/checkEmailUnique');
+// const checkEmailUnique = require('../middleware/checkEmailUnique');
 
 const jwt = require('jsonwebtoken');
 const authJwt = require('../middleware/authJWT');
@@ -113,107 +113,107 @@ router.post('/auth', async (req, res) => {
 // });
 
 //ROUTE UPDATE PROFILE
-router.put('/updateProfile', authJwt, checkEmailUnique, async (req, res) => {
-  const { firstName, lastName, password, establishment, email } = req.body;
+// router.put('/updateProfile', authJwt, async (req, res) => {
+//   const { firstName, lastName, password, establishment, email } = req.body;
 
-  // Check the email format
-  const EMAIL_REGEX =
-    /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i;
+//   // Check the email format
+//   const EMAIL_REGEX =
+//     /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i;
 
-  try {
-    // récupérer l'utilisateur courant via JWT
-    const user = await User.findById(req.userId);
-    if (!user) {
-      return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
-    }
+//   try {
+//     // récupérer l'utilisateur courant via JWT
+//     const user = await User.findById(req.userId);
+//     if (!user) {
+//       return res.status(404).json({ result: false, error: 'Utilisateur introuvable' });
+//     }
 
-    // Construire l'objet des champs à mettre à jour
-    const updatedFields = {};
+//     // Construire l'objet des champs à mettre à jour
+//     const updatedFields = {};
 
-    // prenom
-    if (firstName !== undefined) {
-      if (firstName.trim() === '') {
-        return res.status(400).json({ result: false, error: 'Prénom vide' });
-      }
-      if (firstName !== user.firstName) {
-        updatedFields.firstName = firstName;
-      }
-    }
+//     // prenom
+//     if (firstName !== undefined) {
+//       if (firstName.trim() === '') {
+//         return res.status(400).json({ result: false, error: 'Prénom vide' });
+//       }
+//       if (firstName !== user.firstName) {
+//         updatedFields.firstName = firstName;
+//       }
+//     }
 
-    // nom
-    if (lastName !== undefined) {
-      if (lastName.trim() === '') {
-        return res.status(400).json({ result: false, error: 'Nom vide' });
-      }
-      if (lastName !== user.lastName) {
-        updatedFields.lastName = lastName;
-      }
-    }
+//     // nom
+//     if (lastName !== undefined) {
+//       if (lastName.trim() === '') {
+//         return res.status(400).json({ result: false, error: 'Nom vide' });
+//       }
+//       if (lastName !== user.lastName) {
+//         updatedFields.lastName = lastName;
+//       }
+//     }
 
-    // email
-    if (email !== undefined) {
-      if (!EMAIL_REGEX.test(email)) {
-        return res.status(400).json({ result: false, error: 'Email invalide' });
-      }
-      if (email !== user.email) {
-        updatedFields.email = email;
-      }
-    }
+//     // email
+//     if (email !== undefined) {
+//       if (!EMAIL_REGEX.test(email)) {
+//         return res.status(400).json({ result: false, error: 'Email invalide' });
+//       }
+//       if (email !== user.email) {
+//         updatedFields.email = email;
+//       }
+//     }
 
-    // password
-    if (password !== undefined && password !== '') {
-      if (password.length < 6) {
-        return res.status(400).json({
-          result: false,
-          error: 'Mot de passe minimum 6 caractères',
-        });
-      }
-      updatedFields.password = bcrypt.hashSync(password, 10);
-    }
+//     // password
+//     if (password !== undefined && password !== '') {
+//       if (password.length < 6) {
+//         return res.status(400).json({
+//           result: false,
+//           error: 'Mot de passe minimum 6 caractères',
+//         });
+//       }
+//       updatedFields.password = bcrypt.hashSync(password, 10);
+//     }
 
-    // option
-    if (establishment !== undefined && establishment !== user.establishment) {
-      updatedFields.establishment = establishment || null;
-    }
+//     // option
+//     if (establishment !== undefined && establishment !== user.establishment) {
+//       updatedFields.establishment = establishment || null;
+//     }
 
-    // verification si aucune modification pour éviter requetes inutiles
-    if (Object.keys(updatedFields).length === 0) {
-      return res.json({
-        result: false,
-        error: 'Aucune modification détectée',
-      });
-    }
+//     // verification si aucune modification pour éviter requetes inutiles
+//     if (Object.keys(updatedFields).length === 0) {
+//       return res.json({
+//         result: false,
+//         error: 'Aucune modification détectée',
+//       });
+//     }
 
-    const updatedProfile = await User.findByIdAndUpdate(
-      req.userId, // JWT token
-      updatedFields,
-      { new: true },
-    );
-    res.json({
-      result: true,
-      user: {
-        id: updatedProfile._id,
-        firstName: updatedProfile.firstName,
-        lastName: updatedProfile.lastName,
-        email: updatedProfile.email,
-        role: updatedProfile.role,
-        establishment: updatedProfile.establishment,
-      },
-      message: 'Profil mis à jour',
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ result: false, error: 'Erreur serveur' });
-  }
-});
+//     const updatedProfile = await User.findByIdAndUpdate(
+//       req.userId, // JWT token
+//       updatedFields,
+//       { new: true },
+//     );
+//     res.json({
+//       result: true,
+//       user: {
+//         id: updatedProfile._id,
+//         firstName: updatedProfile.firstName,
+//         lastName: updatedProfile.lastName,
+//         email: updatedProfile.email,
+//         role: updatedProfile.role,
+//         establishment: updatedProfile.establishment,
+//       },
+//       message: 'Profil mis à jour',
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ result: false, error: 'Erreur serveur' });
+//   }
+// });
 
-router.delete('/delete', authJwt, async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.userId);
-    res.json({ result: true, message: 'Compte supprimé' });
-  } catch (err) {
-    res.status(500).json({ result: false, error: 'Erreur serveur' });
-  }
-});
+// router.delete('/delete', authJwt, async (req, res) => {
+//   try {
+//     await User.findByIdAndDelete(req.userId);
+//     res.json({ result: true, message: 'Compte supprimé' });
+//   } catch (err) {
+//     res.status(500).json({ result: false, error: 'Erreur serveur' });
+//   }
+// });
 
 module.exports = router;

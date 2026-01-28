@@ -27,14 +27,14 @@ async function addPhotoToReport(req, res, next) {
 
 async function updateHistory(req, res, next) {
   const reportId = req.params.id;
-  const { status, description } = req.body;
+  const { status, action } = req.body;
   const handler = {
     userId: req.userId,
     role: req.role,
     establishmentId: req.establishmentId,
   };
   try {
-    const result = await animalService.updateHistory(reportId, status, description, handler);
+    const result = await animalService.updateHistory(reportId, status, action, handler);
     res.status(200).json(result);
   } catch (err) {
     return next(err);

@@ -18,15 +18,15 @@ async function newReport(userId, title, desc, location, state, animalType) {
     reporter: userId,
     history: [],
   };
-  const resultId = await animalRepo.newReport(newAnimal);
-  return resultId;
+  const result = await animalRepo.newReport(newAnimal);
+  return result;
 }
 
 async function addPhotoUrlToReport(userId, reportId, photoUrl) {
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     throw new Error('INVALID_USER_ID');
   }
-  if (!mongoose.Type.ObjectId.isValid(reportId)) {
+  if (!mongoose.Types.ObjectId.isValid(reportId)) {
     throw new Error('INVALID_REPORT_ID');
   }
   const isUserValid = await animalRepo.isReporterValid(userId, reportId);
@@ -41,8 +41,8 @@ async function addPhotoUrlToReport(userId, reportId, photoUrl) {
   return result;
 }
 
-async function updateHistory(reportId, status, description, handler) {
-  if (!mongoose.Type.ObjectId.isValid(reportId)) {
+async function updateHistory(reportId, status, action, handler) {
+  if (!mongoose.Types.ObjectId.isValid(reportId)) {
     throw new Error('INVALID_REPORT_ID');
   }
   if (!mongoose.Types.ObjectId.isValid(handler.userId)) {
@@ -51,17 +51,17 @@ async function updateHistory(reportId, status, description, handler) {
   if (!mongoose.Types.ObjectId.isValid(handler.establishmentId)) {
     throw new Error('INVALID_ESTABLISHMENT_ID');
   }
-  const handlerInfos = await userRepo.findUserById(handler.userId);
-  if (!handlerInfos) {
-    throw new Error('USER_NOT_FOUND');
-  }
-  if (handlerInfos.establishmentId !== handler.establishmentId) {
-    throw new Error('INVALID_ESTABLISHMENT');
-  }
+  // const handlerInfos = await userRepo.findUserById(handler.userId);
+  // if (!handlerInfos) {
+  //   throw new Error('USER_NOT_FOUND');
+  // }
+  // if (handlerInfos.establishmentId !== handler.establishmentId) {
+  //   throw new Error('INVALID_ESTABLISHMENT');
+  // }
   const payload = {
     date: new Date(),
     status,
-    action: description || `Statut => ${status}`,
+    action,
     handler: handler.userId,
   };
   const result = await animalRepo.updateHistory(reportId, status, handler, payload);

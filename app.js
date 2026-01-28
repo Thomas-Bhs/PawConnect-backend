@@ -8,7 +8,7 @@ const logger = require('morgan');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const uploadRouter = require('./routes/upload.routes');
-const animalsRouter = require('./routes/animals');
+const animalsRouter = require('./routes/animals.routes');
 const establishmentsRouter = require('./routes/establishments');
 const notificationsRouter = require('./routes/notifications');
 

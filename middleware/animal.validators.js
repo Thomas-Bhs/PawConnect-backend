@@ -38,6 +38,7 @@ const validateReportBody = [
     .withMessage('DESCRIPTION_REQUIRED')
     .bail()
     .isString()
+    .withMessage('DESCRIPTION_INVALID')
     .trim()
     .notEmpty()
     .withMessage('DESCRIPTION_REQUIRED')
@@ -52,7 +53,29 @@ const validateReportBody = [
     .isIn(['chat', 'chien'])
     .withMessage('ANIMAL_TYPE_INVALID'),
 
-  body('state').exists().withMessage('STATE_REQUIRED').bail().isArray(),
+  body('state')
+    .exists()
+    .withMessage('STATE_REQUIRED')
+    .bail()
+    .isArray()
+    .withMessage('STATE_INVALID')
+    .bail()
+    .custom(states => {
+      const allowed = [
+        'blesse',
+        'affaibli',
+        'danger',
+        'coince',
+        'petits',
+        'agressif',
+        'peureux',
+        'jeune',
+        'sociable',
+        'sain',
+      ];
+      return states.every(state => allowed.includes(state));
+    })
+    .withMessage('STATE_INVALID'),
 
   (req, res, next) => {
     const errors = validationResult(req);
@@ -67,7 +90,7 @@ const validateReportBody = [
 ];
 
 const validatePhotoURL = [
-  param(id).isMongoId().withMessage('INVALID_ID'),
+  param('id').isMongoId().withMessage('INVALID_ID'),
 
   body('photoUrl')
     .exists()
@@ -105,7 +128,7 @@ const validatePhotoURL = [
 ];
 
 const validateHistoryBody = [
-  param(id).isMongoId().withMessage('INVALID_ID'),
+  param('id').isMongoId().withMessage('INVALID_ID'),
 
   body('action')
     .exists()
@@ -120,14 +143,14 @@ const validateHistoryBody = [
 
   body('status')
     .exists()
-    .withMessage('ACTION_REQUIRED')
+    .withMessage('STATUS_REQUIRED')
     .bail()
     .isString()
-    .withMessage('ACTION_INVALID')
+    .withMessage('STATUS_INVALID')
     .bail()
     .trim()
     .notEmpty()
-    .withMessage('ACTION_REQUIRED')
+    .withMessage('STATUS_REQUIRED')
     .bail()
     .isIn(['en cours', 'terminé']),
 

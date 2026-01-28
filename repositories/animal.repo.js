@@ -10,8 +10,11 @@ async function isReporterValid(userId, reportId) {
   if (!result) {
     throw new Error('REPORT_NOT_FOUND');
   }
-  if (String(result.reporter) === String(userId)) return true;
-  return false;
+  if (String(result.reporter) === String(userId)) {
+    return true;
+  } else {
+    throw new Error('INVALID_REPORT');
+  }
 }
 
 async function patchReportWithPhoto(reportId, photoUrl) {
@@ -30,7 +33,7 @@ async function patchReportWithPhoto(reportId, photoUrl) {
 }
 
 async function updateHistory(reportId, status, handler, payload) {
-  const updated = await Animal.findByIdAndUpdate(
+  const result = await Animal.findByIdAndUpdate(
     reportId,
     {
       // Mise à jour du statut
@@ -53,6 +56,7 @@ async function updateHistory(reportId, status, handler, payload) {
       new: true,
     },
   );
+  return result;
 }
 
 module.exports = { newReport, isReporterValid, patchReportWithPhoto, updateHistory };
