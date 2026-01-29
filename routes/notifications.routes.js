@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Notification = require('../models/notifications');
-const authJwt = require('../middlewares/JWT');
+const Notification = require('../models/Notification.model');
+const authJwt = require('../middlewares/authJWT');
 
 // Recupere les notifications d'un utilisateur
 router.get('/', authJwt, async (req, res) => {
@@ -26,7 +26,7 @@ router.patch('/:id/read', authJwt, async (req, res) => {
   try {
     // cherche la notification et la met a jour
     const notification = await Notification.findByIdAndUpdate(
-      { _id: id, recipient: req.userId },
+      { _id: id },
       { read: true }, // passe read en true
       { new: true }, // retourne le document mis a jour
     );

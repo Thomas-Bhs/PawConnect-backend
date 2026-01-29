@@ -1,4 +1,24 @@
-// route GET animals/me > JWT Role > controler (http) > service agent ou civil > repo agent ou civil
+const express = require('express');
+const router = express.Router();
+const {
+  validateReportBody,
+  validateHistoryBody,
+  validatePhotoURL,
+} = require('../middlewares/animal.validators');
+const {
+  postNewReport,
+  addPhotoToReport,
+  updateHistory,
+} = require('../controllers/animal.controller');
+const authJWT = require('../middlewares/authJWT');
 
-// route POST animals/new > JWT/middleware > controler > service > save repo
-// route PUT animals/update > jwt/middleware > controler > service > update repo
+// POST new report without the picture
+router.post('/new', authJWT, validateReportBody, postNewReport);
+
+// Add the pictureURL to the report by ID
+router.patch('/:id/addPhoto', authJWT, validatePhotoURL, addPhotoToReport);
+
+// Update the history of a report by ID
+router.patch('/:id/update', authJWT, validateHistoryBody, updateHistory);
+
+module.exports = router;
