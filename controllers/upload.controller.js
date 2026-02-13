@@ -4,6 +4,7 @@ cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL });
 async function signatureHandler(req, res, next) {
   try {
     const timestamp = Math.round(Date.now() / 1000);
+    // Frontend uses this signature for direct unsigned upload parameters.
     const signature = cloudinary.utils.api_sign_request(
       { timestamp },
       cloudinary.config().api_secret,

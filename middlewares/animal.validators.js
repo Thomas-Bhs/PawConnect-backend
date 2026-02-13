@@ -1,4 +1,5 @@
 const { body, param, validationResult } = require('express-validator');
+const { AppError } = require('../errors/AppError');
 
 const validateReportBody = [
   body('location')
@@ -63,6 +64,7 @@ const validateReportBody = [
     .withMessage('STATE_INVALID')
     .bail()
     .custom(states => {
+      // Must stay in sync with Animal model enum.
       const allowed = [
         'blesse',
         'affaibli',
@@ -82,10 +84,7 @@ const validateReportBody = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'INVALID_INPUT',
-        details: errors.array(),
-      });
+      return next(new AppError('INVALID_INPUT', 'Validation failed', errors.array()));
     }
     next();
   },
@@ -106,6 +105,7 @@ const validatePhotoURL = [
     .bail()
     .custom(value => {
       const url = new URL(value);
+      // Enforce our Cloudinary tenant to avoid linking arbitrary remote files.
       if (url.hostname !== 'res.cloudinary.com') {
         throw new Error('INVALID_CLOUDINARY_HOST');
       }
@@ -120,10 +120,7 @@ const validatePhotoURL = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'INVALID_INPUT',
-        details: errors.array(),
-      });
+      return next(new AppError('INVALID_INPUT', 'Validation failed', errors.array()));
     }
     next();
   },
@@ -161,10 +158,7 @@ const validateHistoryBody = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'INVALID_INPUT',
-        details: errors.array(),
-      });
+      return next(new AppError('INVALID_INPUT', 'Validation failed', errors.array()));
     }
     next();
   },

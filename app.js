@@ -10,7 +10,7 @@ const uploadRouter = require('./routes/upload.routes');
 const animalsRouter = require('./routes/animals.routes');
 const establishmentsRouter = require('./routes/establishments.routes');
 const notificationsRouter = require('./routes/notifications.routes');
-const errorHandler = require('./middlewares/errorHandler');
+const errorHandler = require('./middlewares/error.middleware');
 const { globalLimiter } = require('./utils/rateLimiter');
 
 const app = express();
@@ -20,6 +20,7 @@ app.use(logger('dev'));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
+// Keep this before routers so abuse protection applies to every endpoint.
 app.use(globalLimiter);
 
 app.use('/', indexRouter);

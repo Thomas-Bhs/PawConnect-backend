@@ -46,6 +46,7 @@ const animalSchema = new mongoose.Schema({
   history: [
     {
       date: { type: Date, default: Date.now },
+      // Chronological steps of processing; repo prepends newest first for timeline display.
       status: {
         type: String,
         enum: ['en cours', 'terminé'],

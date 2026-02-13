@@ -12,6 +12,7 @@ async function getCivilianReports(userId) {
 
 async function getAgentReports(userEstablishment) {
   const reports = await Animal.find({
+    // Agents see new unassigned reports plus reports already attached to their establishment.
     $or: [{ status: 'nouveau' }, { establishment: userEstablishment }],
   })
     .populate({
@@ -54,23 +55,21 @@ async function updateHistory(reportId, status, handler, payload) {
   const result = await Animal.findByIdAndUpdate(
     reportId,
     {
-      // Mise à jour du statut
       $set: {
         status,
         establishment: handler.establishmentId,
         currentHandler: handler.userId,
       },
 
-      // Ajout de l’entrée d’historique AU DÉBUT du tableau
       $push: {
         history: {
           $each: [payload],
+          // Keep latest action first to match UI timeline ordering.
           $position: 0,
         },
       },
     },
     {
-      // new: true → renvoie le document après mise à jour
       new: true,
     },
   );
