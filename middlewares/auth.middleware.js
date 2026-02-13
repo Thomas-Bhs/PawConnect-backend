@@ -1,38 +1,34 @@
 const jwt = require('jsonwebtoken');
-const { AuthError } = require('../services/auth.service');
+const { AppError } = require('../errors/AppError');
 
 const authJwt = (req, res, next) => {
-  //Get the token from the authorization header in the HTTP request
   const authHeader = req.headers.authorization;
 
-  // Check if secret key is configured
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new AuthError('MISCONFIGURED_AUTH', 'JWT secret is missing', 500);
+    throw new AppError('MISCONFIGURED', 'JWT secret is missing');
   }
 
-  //Check if the token is present in the request headers
   if (!authHeader) {
-    return next(new AuthError('TOKEN_MISSING', 'Token missing', 401));
+    return next(new AppError('UNAUTHORIZED', 'Token missing'));
   }
 
-  // Expect "Bearer <token>"
   const [scheme, token] = authHeader.split(' ');
   if (scheme !== 'Bearer' || !token) {
-    return next(new AuthError('INVALID_AUTH_HEADER', 'Invalid auth header', 401));
+    return next(new AppError('UNAUTHORIZED', 'Invalid authorization header'));
   }
 
   try {
-    //take userId and role from the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
     req.role = decoded.role;
+    // Only agent tokens include establishment scope.
     if (decoded.establishmentId) {
       req.establishmentId = decoded.establishmentId;
     }
-    next(); //pass to the next middleware or route handler
+    next();
   } catch (err) {
-    return next(new AuthError('INVALID_OR_EXPIRED_TOKEN', 'Invalid or expired token', 401));
+    return next(new AppError('UNAUTHORIZED', 'Invalid or expired token'));
   }
 };
 

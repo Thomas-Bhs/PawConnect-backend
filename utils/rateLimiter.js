@@ -7,6 +7,7 @@ const globalLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
+  // Credential endpoints use a stricter bucket to slow brute force attempts.
   windowMs: 15 * 60 * 1000,
   limit: 5,
   message: { error: 'TOO_MANY_ATTEMPTS' },

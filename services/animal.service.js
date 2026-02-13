@@ -4,12 +4,13 @@ const notificationService = require('../services/notification.service');
 const { setPriority } = require('../utils/setPriority');
 const { getRecipientsForNewReport } = require('./report.service');
 const { assertValidObjectId, assertUserExists } = require('../utils/validators');
+const { AppError } = require('../errors/AppError');
 
 async function newReport(userId, userRole, title, desc, location, state, animalType) {
   await assertUserExists(userId);
 
   if (userRole === 'agent') {
-    throw new Error('FORBIDDEN');
+    throw new AppError('FORBIDDEN', 'Agents cannot create reports');
   }
 
   const priority = setPriority(state);
@@ -28,7 +29,7 @@ async function newReport(userId, userRole, title, desc, location, state, animalT
   };
   const result = await animalRepo.newReport(newAnimal);
   if (!result) {
-    throw new Error('REPORT_FAILED');
+    throw new AppError('SERVER_ERROR', 'Failed to create report');
   }
   try {
     const agentsToNotify = await getRecipientsForNewReport(result);
@@ -39,46 +40,48 @@ async function newReport(userId, userRole, title, desc, location, state, animalT
       reportId: result._id,
     });
   } catch (err) {
+    // Report creation must succeed even if notification delivery fails.
     console.error('Failed to send notifications for new report:', err);
   }
 
+  // Caller needs the id to attach a photo in a separate request.
   return result._id;
 }
 
 async function addPhotoUrlToReport(userId, reportId, photoUrl) {
-  assertValidObjectId(userId, 'INVALID_USER_ID');
-  assertValidObjectId(reportId, 'INVALID_REPORT_ID');
+  assertValidObjectId(userId, 'Invalid user ID');
+  assertValidObjectId(reportId, 'Invalid report ID');
 
   const isUserValid = await animalRepo.isReporterValid(userId, reportId);
   if (!isUserValid) {
-    throw new Error('FORBIDDEN');
+    throw new AppError('FORBIDDEN', 'Not the reporter of this animal');
   }
 
   const result = await animalRepo.patchReportWithPhoto(reportId, photoUrl);
   if (!result) {
-    throw new Error('UPDATE_FAILED');
+    throw new AppError('SERVER_ERROR', 'Failed to update report photo');
   }
 
   return result;
 }
 
 async function updateHistory(reportId, status, action, handler) {
-  assertValidObjectId(reportId, 'INVALID_REPORT_ID');
-  assertValidObjectId(handler.userId, 'INVALID_USER_ID');
+  assertValidObjectId(reportId, 'Invalid report ID');
+  assertValidObjectId(handler.userId, 'Invalid user ID');
 
   if (handler.role !== 'agent') {
-    throw new Error('FORBIDDEN');
+    throw new AppError('FORBIDDEN', 'Only agents can update report history');
   }
 
-  assertValidObjectId(handler.establishmentId, 'INVALID_ESTABLISHMENT_ID');
+  assertValidObjectId(handler.establishmentId, 'Invalid establishment ID');
 
   const handlerDetails = await userRepo.findUserById(handler.userId);
   if (!handlerDetails) {
-    throw new Error('USER_NOT_FOUND');
+    throw new AppError('NOT_FOUND', 'Handler not found');
   }
 
   if (String(handlerDetails.establishment) !== String(handler.establishmentId)) {
-    throw new Error('INVALID_ESTABLISHMENT');
+    throw new AppError('FORBIDDEN', 'Handler establishment mismatch');
   }
 
   const payload = {
@@ -90,7 +93,7 @@ async function updateHistory(reportId, status, action, handler) {
 
   const result = await animalRepo.updateHistory(reportId, status, handler, payload);
   if (!result) {
-    throw new Error('UPDATE_FAILED');
+    throw new AppError('SERVER_ERROR', 'Failed to update report history');
   }
 
   try {
@@ -101,6 +104,7 @@ async function updateHistory(reportId, status, action, handler) {
       reportId: result._id,
     });
   } catch (err) {
+    // History update remains the source of truth; notifications are best effort.
     console.error('Failed to send notification for report update:', err);
   }
 

@@ -1,7 +1,9 @@
 const notificationRepo = require('../repositories/notification.repo');
 const { assertValidObjectId, assertUserExists } = require('../utils/validators');
+const { AppError } = require('../errors/AppError');
 
 async function notifyUsers({ recipients, type, message, reportId }) {
+  // Keep payload construction centralized so all notification types stay consistent.
   const notifications = recipients.map(userId => ({
     recipient: userId,
     type,
@@ -14,7 +16,6 @@ async function notifyUsers({ recipients, type, message, reportId }) {
 }
 
 async function getNewUserNotifications(userId) {
-  // get all notification that are not read
   await assertUserExists(userId);
 
   const notifications = await notificationRepo.getNewUserNotifications(userId);
@@ -23,16 +24,15 @@ async function getNewUserNotifications(userId) {
 
 async function markNotificationAsRead(userId, notificationId) {
   await assertUserExists(userId);
-  assertValidObjectId(notificationId, 'INVALID_NOTIFICATION_ID');
+  assertValidObjectId(notificationId, 'Invalid notification ID');
 
   const result = await notificationRepo.markNotificationAsRead(userId, notificationId);
   if (!result) {
-    throw new Error('NOTIFICATION_NOT_FOUND');
+    throw new AppError('NOT_FOUND', 'Notification not found');
   }
 }
 
 async function markAllUserNotificationsAsRead(userId) {
-  // check ownership of notifications to update
   await assertUserExists(userId);
   await notificationRepo.markAllUserNotificationsAsRead(userId);
 }

@@ -1,6 +1,6 @@
 const { body, validationResult } = require('express-validator');
+const { AppError } = require('../errors/AppError');
 
-// Validation middleware chain
 const validateLoginBody = [
   body('email')
     .exists()
@@ -27,16 +27,12 @@ const validateLoginBody = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'INVALID_INPUT',
-        details: errors.array(),
-      });
+      return next(new AppError('INVALID_INPUT', 'Validation failed', errors.array()));
     }
     next();
   },
 ];
 
-// Validation middleware chain
 const validateSignupBody = [
   body('lastName')
     .exists()
@@ -88,6 +84,7 @@ const validateSignupBody = [
   body('establishmentId')
     .custom((value, { req }) => {
       const role = req.body.role;
+      // Business rule: agents must be attached, civilians must not.
       if (role === 'agent') {
         if (!value) throw new Error('ESTABLISHMENT_REQUIRED');
       } else if (role === 'civil') {
@@ -103,10 +100,7 @@ const validateSignupBody = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'INVALID_INPUT',
-        details: errors.array(),
-      });
+      return next(new AppError('INVALID_INPUT', 'Validation failed', errors.array()));
     }
     next();
   },

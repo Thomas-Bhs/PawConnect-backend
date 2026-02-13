@@ -1,10 +1,11 @@
 const Establishment = require('../models/Establishment.model');
 const { getDistanceBetweenTwoPoints } = require('../utils/getDistanceBetweenTwoPoints');
+const { AppError } = require('../errors/AppError');
 
 const getRecipientsForNewReport = async report => {
-  // Find agents from nearby establishments (within 35km radius) to notify
+  // 35km is the product rule for "nearby" establishments.
   if (!report?.location?.lat || !report?.location?.long) {
-    throw new Error('MISSING_REPORT_LOCATION');
+    throw new AppError('INVALID_INPUT', 'Report location is missing');
   }
 
   const establishments = await Establishment.find().select('location agents');
@@ -19,6 +20,7 @@ const getRecipientsForNewReport = async report => {
       agentsToNotify.push(...establishment.agents);
     }
   }
+  // Same agent can appear through multiple establishments; dedupe before insertMany.
   const uniqueAgentIds = [...new Set(agentsToNotify.map(agent => agent.toString()))];
   return uniqueAgentIds;
 };

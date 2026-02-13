@@ -12,6 +12,7 @@ async function getCivilianReports(userId) {
 
 async function getAgentReports(userEstablishment) {
   const reports = await Animal.find({
+    // Agents see new unassigned reports plus reports already attached to their establishment.
     $or: [{ status: 'nouveau' }, { establishment: userEstablishment }],
   })
     .populate({
@@ -54,23 +55,21 @@ async function updateHistory(reportId, status, handler, payload) {
   const result = await Animal.findByIdAndUpdate(
     reportId,
     {
-      // Update status and assignment
       $set: {
         status,
         establishment: handler.establishmentId,
         currentHandler: handler.userId,
       },
 
-      // Prepend history entry to the beginning of the array
       $push: {
         history: {
           $each: [payload],
+          // Keep latest action first to match UI timeline ordering.
           $position: 0,
         },
       },
     },
     {
-      // new: true returns the document after update
       new: true,
     },
   );

@@ -4,7 +4,7 @@ async function getAllNewNotifications(req, res, next) {
   const userId = req.userId;
   try {
     const notifications = await notificationService.getNewUserNotifications(userId);
-    return res.status(200).json({ notifications });
+    return res.status(200).json(notifications);
   } catch (err) {
     next(err);
   }
