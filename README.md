@@ -1,134 +1,107 @@
 # PawConnect Backend
 
-API REST Node.js/Express pour PawConnect: authentification, signalements, notifications et gestion des établissements.
+Backend REST API powering PawConnect, a platform designed to help citizens report lost or found animals and enable authorities to manage and respond efficiently.
 
-## Fonctionnalités
-- Auth JWT (`/auth/login`, `/auth/signup`)
-- Gestion des signalements (`/animals`)
-- Notifications utilisateur (`/notifications`)
-- Signature Cloudinary pour upload côté frontend (`/upload/signature`)
-- Limitation de débit (`globalLimiter`, `authLimiter`, `apiLimiter`)
-- Gestion d’erreurs unifiée via `AppError`
+This project demonstrates secure authentication, and scalable backend design using Node.js and MongoDB.
 
-## Stack
-- Node.js
-- Express
-- MongoDB + Mongoose
-- JWT (`jsonwebtoken`)
-- Validation (`express-validator`)
-- Sécurité (`helmet`, `express-rate-limit`)
-- Upload media signé (`cloudinary`)
+PawConnect aims to:
+	•	Allow citizens to report lost or found animals
+	•	Enable agents to manage reports efficiently
+	•	Provide real-time notification tracking
+	•	Securely manage media uploads
+	•	Enforce role-based access control
 
-## Installation
-```bash
-cd backend
-npm install
-```
-
-## Variables d’environnement
-Créer ton fichier local à partir de l’exemple:
-
-```bash
-cp .env.example .env
-```
-
-Puis compléter les valeurs dans `.env`.
-
-Contenu attendu (voir `backend/.env.example`):
-
-```env
-PORT=3000
-CONNECTION_STRING=your_mongodb_connection_string
-JWT_SECRET=replace_with_a_long_random_secret
-CLOUDINARY_URL=replace_with_your_cloudinary_url
-```
-
-Variables effectivement utilisées dans le code:
-- `PORT` (`bin/www`)
-- `CONNECTION_STRING` (`models/connection.js`)
-- `JWT_SECRET` (`middlewares/auth.middleware.js`, `services/auth.service.js`)
-- `CLOUDINARY_URL` (`controllers/upload.controller.js`)
-
-## Lancement
-```bash
-npm start
-```
-
-Le serveur démarre via `node ./bin/www`.
+This backend was built with a strong focus on modularity, security, and maintainability.
 
 ## Architecture
-```text
+
 backend/
-  app.js                # bootstrap Express (middlewares, routes, error handler)
-  bin/www               # point d'entrée HTTP
-  controllers/          # orchestration HTTP -> service
-  services/             # logique métier
-  repositories/         # accès MongoDB
-  models/               # schémas Mongoose
-  middlewares/          # auth, validation, erreurs
-  errors/               # AppError + mapping code -> status HTTP
-  utils/                # utilitaires transverses
-  routes/               # définition des endpoints
-```
+  controllers/     # HTTP layer
+  services/        # Business logic
+  repositories/    # Data access abstraction
+  models/          # Mongoose schemas
+  middlewares/     # Auth, validation, error handling
+  routes/          # Route definitions
+  errors/          # Centralized error system
 
-## Endpoints principaux
+## Authentification & Authorization
 
-### Auth
-- `POST /auth/signup`
-- `POST /auth/login`
+  •	JWT-based authentication
+	•	Role-based access control (civil, agent)
+	•	Secure route protection via middleware
+	•	Establishment-scoped access for agents
 
-### Signalements
-- `GET /animals/me` (JWT requis)
-- `POST /animals` (JWT requis, rôle `civil`)
-- `PATCH /animals/:id/photo` (JWT requis, reporter uniquement)
-- `PATCH /animals/:id` (JWT requis, rôle `agent`)
+Protected routes require : 
+  Authorization: Bearer <token>
 
-### Notifications
-- `GET /notifications` (JWT requis)
-- `PATCH /notifications/:id/read` (JWT requis)
-- `PATCH /notifications/read-all` (JWT requis)
+JWT payload contains:
+  • userId
+  • role
+  • establishmentId (for agents)
 
-### Upload
-- `GET /upload/signature` (JWT requis)
+## Features
 
-### Etablissements
-- `GET /establishments`
-- `POST /establishments`
+Animal Reports
+  • Create a report (citizen)
+  • Update report status (agent)
+  • Upload report photo
+  • Retrieve personal reports
 
-## Authentification
-Header attendu sur routes protégées:
+Notifications
+  • Get user notifications
+  • Mark one as read
+  • Mark all as read
 
-```http
-Authorization: Bearer <token>
-```
+Establishments
+  • Create establishment
+  • Retrieve establishment list
 
-Le token contient:
-- `userId`
-- `role` (`civil` ou `agent`)
-- `establishmentId` (agents uniquement)
+Secure Media Upload
+  • Cloudinary signed upload endpoint
 
-## Format d’erreur
-Les erreurs métier passent par `AppError` et sont normalisées par `middlewares/error.middleware.js`:
+## Technical Stack
+  • Node.js
+  • Express
+  • MongoDB + Mongoose
+  • JWT
+  • Cloudinary
+  • express-rate-limit
+  • Jest / Supertest
 
-```json
+## Standardized Error Format
+
+All business errors follow a unified structure:
 {
   "error": "INVALID_INPUT",
   "message": "Validation failed",
   "details": []
 }
-```
 
-Codes usuels: `INVALID_INPUT`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMITED`, `MISCONFIGURED`, `SERVER_ERROR`.
+This ensures consistency between backend and frontend error handling.
 
-## Rate limiting
-- Global: `100 req / minute`
-- Auth: `5 req / 15 minutes`
-- API métier: `15 req / 15 minutes`
+## Testing
 
-## Tests
-Jest/Supertest sont présents. Aucun script `test` n’est défini dans `package.json`.
+Testing is implemented with:
+  • Jest
+  • Supertest
 
-Exécution manuelle:
-```bash
-npx jest
-```
+Run manually:
+  npx jest
+
+## What This Project Demonstrates
+
+  • Clean backend architecture
+	•	Secure authentication flow
+	•	Role-based authorization
+	•	RESTful API design
+	•	MongoDB data modeling
+	•	Error normalization strategy
+	•	Production-oriented middleware configuration
+
+## Author
+
+PawConnect was developed in 2 weeks as part of the La Capsule bootcamp.
+
+The goal was to design and deliver a complete frontend + backend application within a strict two-week deadline, achieving a production-ready MVP.
+
+Developed by a team of 5 using GitHub and agile practices (feature branching, collaborative development), the project reflects real-world delivery constraints and modular backend architecture principles.
