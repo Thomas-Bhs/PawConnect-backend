@@ -24,7 +24,7 @@ backend/
   routes/          # Route definitions
   errors/          # Centralized error system
 
-## Authentification & Authorization
+## Authentication & Authorization
 
   •	JWT-based authentication
 	•	Role-based access control (civil, agent)
