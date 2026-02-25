@@ -5,7 +5,8 @@ Backend REST API powering PawConnect, a platform designed to help citizens repor
 This project demonstrates secure authentication, and scalable backend design using Node.js and MongoDB.
 
 PawConnect aims to:
-	•	Allow citizens to report lost or found animals
+
+	•   Allow citizens to report lost or found animals
 	•	Enable agents to manage reports efficiently
 	•	Provide real-time notification tracking
 	•	Securely manage media uploads
@@ -15,6 +16,7 @@ This backend was built with a strong focus on modularity, security, and maintain
 
 ## Architecture
 
+```text
 backend/
   controllers/     # HTTP layer
   services/        # Business logic
@@ -23,10 +25,11 @@ backend/
   middlewares/     # Auth, validation, error handling
   routes/          # Route definitions
   errors/          # Centralized error system
+```
 
 ## Authentication & Authorization
 
-  •	JWT-based authentication
+ 	•   JWT-based authentication
 	•	Role-based access control (civil, agent)
 	•	Secure route protection via middleware
 	•	Establishment-scoped access for agents
@@ -35,62 +38,74 @@ Protected routes require :
   Authorization: Bearer <token>
 
 JWT payload contains:
-  • userId
-  • role
-  • establishmentId (for agents)
+
+	• userId
+  	• role
+  	• establishmentId (for agents)
 
 ## Features
 
 Animal Reports
-  • Create a report (citizen)
-  • Update report status (agent)
-  • Upload report photo
-  • Retrieve personal reports
+
+	• Create a report (citizen)
+  	• Update report status (agent)
+  	• Upload report photo
+  	• Retrieve personal reports
 
 Notifications
-  • Get user notifications
-  • Mark one as read
-  • Mark all as read
+
+	• Get user notifications
+    • Mark one as read
+	• Mark all as read
 
 Establishments
-  • Create establishment
-  • Retrieve establishment list
+
+  	• Create establishment
+  	• Retrieve establishment list
 
 Secure Media Upload
-  • Cloudinary signed upload endpoint
+  	
+	• Cloudinary signed upload endpoint
 
 ## Technical Stack
-  • Node.js
-  • Express
-  • MongoDB + Mongoose
-  • JWT
-  • Cloudinary
-  • express-rate-limit
-  • Jest / Supertest
+  
+  	• Node.js
+  	• Express
+  	• MongoDB + Mongoose
+  	• JWT
+  	• Cloudinary
+  	• express-rate-limit
+  	• Jest / Supertest
 
 ## Standardized Error Format
 
 All business errors follow a unified structure:
+```json
 {
   "error": "INVALID_INPUT",
   "message": "Validation failed",
   "details": []
 }
+```
 
 This ensures consistency between backend and frontend error handling.
 
 ## Testing
 
 Testing is implemented with:
-  • Jest
-  • Supertest
+
+  	• Jest
+  	• Supertest
 
 Run manually:
+
+```bash
   npx jest
+```
 
 ## What This Project Demonstrates
 
-  • Clean backend architecture
+  	• Clean backend architecture
 	•	Secure authentication flow
 	•	Role-based authorization
 	•	RESTful API design
